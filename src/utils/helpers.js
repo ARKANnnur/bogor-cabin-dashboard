@@ -1,4 +1,4 @@
-import { format, formatDistance, parseISO } from 'date-fns';
+import { format, formatDistance, formatISO, parseISO } from 'date-fns';
 import { differenceInDays } from 'date-fns/esm';
 
 // We want to make this function work for both Date objects and strings (which come from Supabase)
@@ -38,6 +38,7 @@ export const getToday = function (options = {}) {
   // };
 };
 
+
 export const formatCurrency = (value) =>
   new Intl.NumberFormat('en', { style: 'currency', currency: 'USD' }).format(
     value
@@ -47,3 +48,11 @@ export const formatDateToNumber = (dateString) => {
   const formattedDate = format(dateString, 'yyyyMMdd'); // Format menjadi 'YYYYMMDD'
   return Number(formattedDate);
 };
+
+export const convertToCustomTimestamp = (dateString) => {
+  const customDate = new Date(dateString);
+  customDate.setUTCHours(0, 0, 0, 0); // Mengatur jam, menit, detik, dan milidetik ke 00 (dalam zona waktu UTC)
+  return customDate.toISOString();
+};
+export const formattedInitialDate = (initialTimestamp) =>
+  formatISO(parseISO(initialTimestamp), { representation: 'date' });

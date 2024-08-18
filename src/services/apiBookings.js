@@ -154,3 +154,16 @@ export async function deleteBooking(id) {
   }
   return data;
 }
+
+export async function getBookingsDatesHasBooked(cabinId) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('startDate, endDate')
+    .eq('cabinId', cabinId);
+
+  if (error) {
+    console.error(error);
+    throw new Error('Dates Bookings has Booked could not be Loaded');
+  }
+  return data;
+}

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { useLocation } from 'react-router-dom';
 import { useDarkMode } from '../contexts/DarkModeContexts';
 
 const StyledLogo = styled.div`
@@ -12,12 +13,17 @@ const Img = styled.img`
 
 function Logo() {
   const { isDarkMode } = useDarkMode();
+  const location = useLocation();
 
-  const src = isDarkMode ? '/img/logo-dark.png' : '/img/logo-light.png'
+  const src = isDarkMode
+    ? '/img/logoCabin-dark.png'
+    : '/img/logoCabin-light.png';
+  const logoStyle =
+    location.pathname === '/login' ? { height: '15rem', width: 'auto' } : {};
 
   return (
     <StyledLogo>
-      <Img src={src} alt="Logo" />
+      <Img src={src} alt="Logo" style={logoStyle} />
     </StyledLogo>
   );
 }

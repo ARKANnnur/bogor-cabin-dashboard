@@ -57,7 +57,7 @@ const Button = styled.button`
 
 const Box = styled.div`
   overflow: auto;
-  height: 80dvh;
+  max-height: 80dvh;
 `;
 
 Modal.propTypes = {

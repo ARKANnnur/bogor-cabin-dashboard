@@ -1,6 +1,10 @@
 /* eslint-disable react/prop-types */
 import { useForm } from 'react-hook-form';
 import { useEffect, useState } from 'react';
+import { DayPicker } from 'react-day-picker';
+import 'react-day-picker/style.css';
+
+import { useDarkMode } from '../../contexts/DarkModeContexts';
 
 import Input from '../../ui/Input';
 import Form from '../../ui/Form';
@@ -15,14 +19,27 @@ import useSettings from '../settings/useSettings';
 import { useEditBooking } from './useEditBooking';
 import useGuests from '../guests/useGuests';
 import useCabin from '../cabins/useCabin';
+import useBookingsSelectedDays from './useBookingsDatesHasBooked';
+import FormFlex from '../../ui/FormFlex';
+import { getDisabledDates } from '../../utils/getDisabledDates';
+import {
+  convertToCustomTimestamp,
+  formattedInitialDate,
+} from '../../utils/helpers';
 
 function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
+  const { isDarkMode } = useDarkMode();
   const { isLoading: isSettings, settings = {} } = useSettings();
   const { isLoading: isCabins, cabins = {} } = useCabin();
   const { isLoading: isGuests, guests = {} } = useGuests();
 
   const { isCreating, createBooking } = useCreateBooking();
   const { isEditing, editBooking } = useEditBooking();
+  const {
+    isBookingsDatesHasBooked,
+    setBookingsDatesHasBooked,
+    bookingsDatesHasBooked,
+  } = useBookingsSelectedDays();
 
   const isWorking =
     isCreating || isEditing || isSettings || isCabins || isGuests;
@@ -44,10 +61,10 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
 
   // setting defaul date
   const editStartDate = isEditSession
-    ? new Date(startDate).toISOString().substring(0, 10)
+    ? formattedInitialDate(startDate)
     : new Date();
   const editEndDate = isEditSession
-    ? new Date(endDate).toISOString().substring(0, 10)
+    ? formattedInitialDate(endDate)
     : new Date();
   const bookingEditValue = {
     startDate: editStartDate,
@@ -55,27 +72,24 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
     ...editValues,
   };
 
+  // Form Settings
   const {
     register,
     reset,
     handleSubmit,
-    getValues,
     watch,
     formState: { errors },
   } = useForm({
     defaultValues: isEditSession ? bookingEditValue : {},
   });
-
-  // operation getNumNights auto
-  const operationNumNights = watch('endDate') - watch('startDate');
-  const resultNumNights = editNumNights
-    ? editNumNights
-    : operationNumNights / (1000 * 60 * 60 * 24);
-
   const numGuests = Number(watch('numGuests'));
+
+  // Operation has Breakfast
   const [hasBreakfast, setHasBreakfast] = useState(
     editHasBreakfast ? editHasBreakfast : false
   );
+
+  // Operation set Cabin Price
   const [cabinPrice, setCabinPrice] = useState({
     id: editCabinId ? editCabinId : cabins[0]?.id,
     price: editCabinPrice
@@ -83,9 +97,50 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
       : cabins[0]?.regularPrice - cabins[0]?.discount,
   });
 
+  useEffect(() => {
+    setCabinPrice({
+      id: editCabinId ? editCabinId : cabins[0]?.id,
+      price: editCabinPrice
+        ? editCabinPrice
+        : cabins[0]?.regularPrice - cabins[0]?.discount,
+    });
+  }, [cabins, editCabinId, editCabinPrice]);
+
+  // Operation setSelected Day bookinged
+  const [selectedDays, setSelectedDays] = useState([]);
+  const [selectNowDays, setSelectNowDays] = useState({
+    from: isEditSession ? editStartDate : '',
+    to: isEditSession ? editEndDate : '',
+  });
+
+  useEffect(() => {
+    if (cabinPrice.id) setBookingsDatesHasBooked(cabinPrice.id);
+    setSelectedDays(getDisabledDates(bookingsDatesHasBooked));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cabinPrice]);
+  useEffect(() => {
+    if (bookingsDatesHasBooked)
+      setSelectedDays(getDisabledDates(bookingsDatesHasBooked));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingsDatesHasBooked]);
+
+  // operation getNumNights auto
+  const operationNumNights = selectNowDays?.from
+    ? selectNowDays?.to - selectNowDays?.from
+    : 0;
+  const resultNumNights = editNumNights
+    ? operationNumNights
+      ? operationNumNights / (1000 * 60 * 60 * 24)
+      : editNumNights
+    : operationNumNights / (1000 * 60 * 60 * 24);
+
   const [guestId, setGuestId] = useState(
     editGuestId ? editGuestId : guests[0]?.id
   );
+  useEffect(() => {
+    setGuestId(guests[0]?.id);
+  }, [guests]);
+
   const [extrasPrice, setExtraPrice] = useState(
     editExtrasPrice ? editExtrasPrice : 0
   );
@@ -113,9 +168,12 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
   ]);
 
   function onSubmit(data) {
+    const startDate = convertToCustomTimestamp(selectNowDays?.from);
+    const endDate = convertToCustomTimestamp(selectNowDays?.to);
+
     const newBooking = {
-      startDate: data.startDate,
-      endDate: data.endDate,
+      startDate,
+      endDate,
       status: data.status,
       isPaid: Boolean(data.isPaid),
       observations: data.observations,
@@ -151,58 +209,26 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
     console.log(error);
   }
 
-  if (isWorking) return <Spinner />;
+  if (isWorking)
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <Spinner />
+      </div>
+    );
 
   return (
     <Form
       onSubmit={handleSubmit(onSubmit, onError)}
       type={onCloseModal ? 'modal' : 'regular'}
     >
-      <FormRow label="Start Date" error={errors?.startDate?.message}>
-        <Input
-          type="date"
-          id="startDate"
-          disabled={isWorking}
-          {...register('startDate', {
-            valueAsDate: true,
-            required: 'this field is require',
-            validate: (value) => {
-              if (value > getValues('endDate'))
-                return 'The date must be before the end date';
-              return true;
-            },
-          })}
-        />
-      </FormRow>
-
-      <FormRow label="End Date" error={errors?.endDate?.message}>
-        <Input
-          type="date"
-          id="endDate"
-          disabled={isWorking}
-          {...register('endDate', {
-            valueAsDate: true,
-            required: 'this field is require',
-            validate: (value) => {
-              if (value < getValues('startDate'))
-                return 'The date must be after the start date';
-              return true;
-            },
-          })}
-        />
-      </FormRow>
-
-      <FormRow label="Number Night" error={errors?.numNights?.message}>
-        <Input
-          type="number"
-          id="numNights"
-          disabled={isWorking}
-          minLength={1}
-          required="Capacity value at least 1"
-          value={resultNumNights}
-        />
-      </FormRow>
-
       {guests.length > 0 && (
         <FormRow label="Guest Name Booking">
           <StyledSelect
@@ -215,6 +241,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
               <option
                 key={guest.id}
                 value={guest.id}
+                defaultValue={guests[0]?.id}
                 selected={fullName ? guest.fullName === fullName : null}
               >
                 {guest.fullName}
@@ -244,6 +271,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
               return true;
             },
           })}
+          placeholder={`num guests must 1 - ${settings.maxGuestsPerBooking}`}
         />
       </FormRow>
 
@@ -285,6 +313,75 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         />
       </FormRow>
 
+      <FormFlex>
+        {isBookingsDatesHasBooked ? (
+          <Spinner />
+        ) : (
+          <DayPicker
+            mode="range"
+            defaultMonth={isEditSession ? new Date(editStartDate) : new Date()}
+            selected={selectNowDays || null}
+            disabled={selectedDays}
+            modifiersStyles={{
+              selected: {
+                background: `${isDarkMode ? '#111827' : '#d1d5db'}`,
+                color: `${isDarkMode ? '#f9fafb' : '#111827'}`,
+                border: 'none',
+              },
+              disabled: {
+                color: '#b91c1c',
+                opacity: '100',
+                fontWeight: 'bold',
+              },
+              today: {
+                color: '#4338ca',
+              },
+            }}
+            fromDate={new Date()}
+            onSelect={(date) => setSelectNowDays(date)}
+            required="this field is require "
+          />
+        )}
+      </FormFlex>
+
+      <FormRow label="Start Date" error={errors?.startDate?.message}>
+        <Input
+          type="date"
+          id="startDate"
+          value={
+            selectNowDays?.from
+              ? new Date(selectNowDays?.from).toISOString().substring(0, 10)
+              : ''
+          }
+          required="this field is require"
+          disabled
+        />
+      </FormRow>
+
+      <FormRow label="End Date" error={errors?.endDate?.message}>
+        <Input
+          type="date"
+          id="endDate"
+          value={
+            selectNowDays?.to
+              ? new Date(selectNowDays?.to).toISOString().substring(0, 10)
+              : ''
+          }
+          required="this field is require"
+          disabled
+        />
+      </FormRow>
+
+      <FormRow label="Number Night" error={errors?.numNights?.message}>
+        <Input
+          type="text"
+          id="numNights"
+          disabled
+          required="Capacity value at least 1"
+          value={resultNumNights ? resultNumNights : 0}
+        />
+      </FormRow>
+
       <FormRow label="Has Breakfast" error={errors?.hasBreakfast?.message}>
         <StyledSelect
           type="text"
@@ -303,7 +400,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
           type="text"
           id="extrasPrice"
           disabled
-          value={extrasPrice}
+          value={extrasPrice ? extrasPrice : 0}
           required="this field is require"
         />
       </FormRow>
@@ -313,12 +410,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
           type="text"
           id="totalPrice"
           disabled
-          value={
-            cabinPrice || extrasPrice
-              ? (Number(cabinPrice.price) + Number(extrasPrice)) *
-                Number(resultNumNights)
-              : 0
-          }
+          value={totalPrice ? totalPrice : 0}
           required="this field is require"
         />
       </FormRow>

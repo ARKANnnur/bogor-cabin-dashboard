@@ -41,10 +41,12 @@ const GlobalStyles = createGlobalStyle`
 
   --image-grayscale: 0;
   --image-opacity: 100%;
+
+  --rdp-accent-color: #1f2937;
   }
 
   &.dark-mode {
-    --color-grey-0: #18212f;
+--color-grey-0: #18212f;
 --color-grey-50: #111827;
 --color-grey-100: #1f2937;
 --color-grey-200: #374151;
@@ -95,6 +97,7 @@ const GlobalStyles = createGlobalStyle`
   --border-radius-sm: 5px;
   --border-radius-md: 7px;
   --border-radius-lg: 9px;
+  --rdp-accent-color: #f9fafb;
 }
 
 *,
@@ -183,11 +186,12 @@ img {
   /* For dark mode */
   filter: grayscale(var(--image-grayscale)) opacity(var(--image-opacity));
 }
-
-
-/* FOR DARK MODE */
-
-
+.rdp-root {
+  --rdp-accent-color: #424242;
+}
+.rdp-chevron {
+  fill: var(--rdp-accent-color);
+}
 
 `;
 export default GlobalStyles;
