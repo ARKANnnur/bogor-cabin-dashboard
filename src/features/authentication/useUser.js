@@ -7,7 +7,14 @@ function useUser() {
     queryFn: getCurrentUser,
   });
 
-  return { isLoading, user, isAuthenticated: user?.role === 'authenticated' };
+  const guestUser = user?.email === 'guest@gmail.com';
+
+  return {
+    isLoading,
+    user,
+    isAuthenticated: user?.role === 'authenticated',
+    guestUser,
+  };
 }
 
 export default useUser;

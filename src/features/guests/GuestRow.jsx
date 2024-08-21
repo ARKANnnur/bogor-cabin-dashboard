@@ -1,12 +1,15 @@
 import styled from 'styled-components';
+import { HiPencil, HiTrash } from 'react-icons/hi2';
+
+import useDeleteGuest from './useDeleteGuest';
+import CreateGuestFrom from './CreateGuestForm';
+import useUser from '../authentication/useUser';
+
 import Table from '../../ui/Table';
 import { Flag } from '../../ui/Flag';
 import Modal from '../../ui/Modal';
 import Menus from '../../ui/Menus';
-import { HiPencil, HiTrash } from 'react-icons/hi2';
 import ConfirmDelete from '../../ui/ConfirmDelete';
-import useDeleteGuest from './useDeleteGuest';
-import CreateGuestFrom from './CreateGuestForm';
 
 const Cabin = styled.div`
   font-size: 1.4rem;
@@ -31,6 +34,7 @@ const Stacked = styled.div`
 /* eslint-disable react/prop-types */
 function GuestRow({ guest }) {
   const { isDeleting, deleteGuest } = useDeleteGuest();
+  const { guestUser } = useUser();
 
   return (
     <Table.Row select={guest.id}>
@@ -69,7 +73,7 @@ function GuestRow({ guest }) {
           <ConfirmDelete
             resource={`Guests ${guest.fullName}`}
             onConfirm={() => deleteGuest(guest.id)}
-            disabled={isDeleting}
+            disabled={isDeleting || guestUser}
           />
         </Modal.Window>
       </Modal>

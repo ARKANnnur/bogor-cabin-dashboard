@@ -18,6 +18,7 @@ import Empty from '../../ui/Empty';
 import useBooking from './useBooking';
 import useDeleteBooking from './useDeleteBooking';
 import CheckoutButton from '../check-in-out/CheckoutButton';
+import useUser from '../authentication/useUser';
 
 const HeadingGroup = styled.div`
   display: flex;
@@ -29,6 +30,8 @@ function BookingDetail() {
   const { isLoading, booking } = useBooking();
   const { isLoading: isDeleting, deleteBooking } = useDeleteBooking();
   const { id: bookingId, status } = booking;
+
+  const { guestUser } = useUser();
 
   const navigate = useNavigate();
   const moveBack = useMoveBack();
@@ -56,12 +59,19 @@ function BookingDetail() {
 
       <ButtonGroup>
         {status === 'unconfirmed' && (
-          <Button onClick={() => navigate(`/checkin/${bookingId}`)}>
+          <Button
+            onClick={() => navigate(`/checkin/${bookingId}`)}
+            disabled={guestUser}
+          >
             Check in
           </Button>
         )}
         {status === 'checked-in' && (
-          <CheckoutButton icon={<HiArrowUpOnSquare />} bookingId={bookingId} />
+          <CheckoutButton
+            icon={<HiArrowUpOnSquare />}
+            bookingId={bookingId}
+            disabled={guestUser}
+          />
         )}
 
         <Modal>
@@ -74,7 +84,7 @@ function BookingDetail() {
               onConfirm={() =>
                 deleteBooking(bookingId, { onSettled: navigate(-1) })
               }
-              disabled={isDeleting}
+              disabled={isDeleting || guestUser}
             />
           </Modal.Window>
         </Modal>

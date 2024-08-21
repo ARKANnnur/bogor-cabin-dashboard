@@ -5,16 +5,20 @@ import FormRow from '../../ui/FormRow';
 import Input from '../../ui/Input';
 import useSignup from './useSignup';
 import SpinnerMini from '../../ui/SpinnerMini';
+import useUser from './useUser';
+import toast from 'react-hot-toast';
 
 // Email regex: /\S+@\S+\.\S+/
 
 function SignupForm() {
   const { register, formState, handleSubmit, getValues, reset } = useForm();
+  const { guestUser } = useUser();
   const { errors } = formState;
   const { isLoading, signup } = useSignup();
 
   function onSubmit({ fullName, email, password }) {
-    signup({ fullName, email, password }, { onSettled: () => reset() });
+    if (guestUser) return toast.error('You are not allowed');
+    else signup({ fullName, email, password }, { onSettled: () => reset() });
   }
 
   function onError(error) {
@@ -27,7 +31,7 @@ function SignupForm() {
         <Input
           type="text"
           id="fullName"
-          disabled={isLoading}
+          disabled={isLoading || guestUser}
           {...register('fullName', { required: 'this field required' })}
         />
       </FormRow>
@@ -36,7 +40,7 @@ function SignupForm() {
         <Input
           type="email"
           id="email"
-          disabled={isLoading}
+          disabled={isLoading || guestUser}
           {...register('email', {
             required: 'this field required',
             pattern: {
@@ -54,7 +58,7 @@ function SignupForm() {
         <Input
           type="password"
           id="password"
-          disabled={isLoading}
+          disabled={isLoading || guestUser}
           {...register('password', {
             required: 'this field required',
             minLength: {
@@ -69,7 +73,7 @@ function SignupForm() {
         <Input
           type="password"
           id="passwordConfirm"
-          disabled={isLoading}
+          disabled={isLoading || guestUser}
           {...register('passwordConfirm', {
             required: 'this field required',
             validate: (value) =>
@@ -80,10 +84,15 @@ function SignupForm() {
 
       <FormRow>
         {/* type is an HTML attribute! */}
-        <Button variation="secondary" type="reset" disabled={isLoading} onClick={reset}>
+        <Button
+          variation="secondary"
+          type="reset"
+          disabled={isLoading || guestUser}
+          onClick={reset}
+        >
           Cancel
         </Button>
-        <Button disabled={isLoading}>
+        <Button disabled={isLoading || guestUser}>
           {!isLoading ? 'Create new user' : <SpinnerMini />}
         </Button>
       </FormRow>

@@ -21,6 +21,7 @@ import { formatDistanceFromNow } from '../../utils/helpers';
 import useCheckout from '../check-in-out/useCheckout';
 import useDeleteBooking from './useDeleteBooking';
 import CreateBookingForm from './CreateBookingForm';
+import useUser from '../authentication/useUser';
 
 const Cabin = styled.div`
   font-size: 1.6rem;
@@ -63,6 +64,7 @@ function BookingRow({ booking }) {
   const navigate = useNavigate();
   const { isCheckingout, checkout } = useCheckout();
   const { isLoading: isDeleting, deleteBooking } = useDeleteBooking();
+  const { guestUser } = useUser();
 
   const statusToTagName = {
     unconfirmed: 'blue',
@@ -110,6 +112,7 @@ function BookingRow({ booking }) {
               <Menus.Button
                 icon={<HiArrowDownOnSquare />}
                 onClick={() => navigate(`/checkin/${bookingId}`)}
+                disabled={guestUser}
               >
                 Check in
               </Menus.Button>
@@ -118,7 +121,7 @@ function BookingRow({ booking }) {
               <Menus.Button
                 icon={<HiArrowUpOnSquare />}
                 onClick={() => checkout(bookingId)}
-                disabled={isCheckingout}
+                disabled={isCheckingout || guestUser}
               >
                 Check Out
               </Menus.Button>
@@ -142,7 +145,7 @@ function BookingRow({ booking }) {
           <ConfirmDelete
             resource={`booking ${guestName}`}
             onConfirm={() => deleteBooking(bookingId)}
-            disabled={isDeleting}
+            disabled={isDeleting || guestUser}
           />
         </Modal.Window>
       </Modal>

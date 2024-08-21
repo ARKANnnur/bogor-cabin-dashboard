@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
+import toast from 'react-hot-toast';
 
 import { formatCurrency } from '../../utils/helpers';
 import Modal from '../../ui/Modal';
@@ -11,6 +12,7 @@ import { HiPencil, HiSquare2Stack, HiTrash } from 'react-icons/hi2';
 import useCreateCabin from './useCreateCabin';
 import Table from '../../ui/Table';
 import Menus from '../../ui/Menus';
+import useUser from '../authentication/useUser';
 
 const Img = styled.img`
   display: block;
@@ -46,6 +48,7 @@ CabinRow.propTypes = {
 function CabinRow({ cabin }) {
   const { isDeleting, deleteCabin } = useDeleteCabin();
   const { isCreating, createCabin } = useCreateCabin();
+  const { guestUser } = useUser();
 
   const {
     id: cabinId,
@@ -58,6 +61,7 @@ function CabinRow({ cabin }) {
   } = cabin;
 
   function handleDuplicate() {
+    if (guestUser) return toast.error('You are not allowed');
     createCabin({
       name: `Copy of ${name}`,
       maxCapacity,
@@ -88,7 +92,7 @@ function CabinRow({ cabin }) {
               <Menus.Button
                 icon={<HiSquare2Stack />}
                 onClick={handleDuplicate}
-                disable={isCreating}
+                disable={isCreating || guestUser}
               >
                 Duplicate
               </Menus.Button>
@@ -109,7 +113,7 @@ function CabinRow({ cabin }) {
             <Modal.Window name="delete">
               <ConfirmDelete
                 resource="cabins"
-                disabled={isDeleting}
+                disabled={isDeleting || guestUser}
                 onConfirm={() => deleteCabin(cabinId)}
               />
             </Modal.Window>

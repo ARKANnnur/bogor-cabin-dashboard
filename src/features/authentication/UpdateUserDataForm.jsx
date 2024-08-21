@@ -8,11 +8,13 @@ import Input from '../../ui/Input';
 
 import useUser from './useUser';
 import useUpdateUser from './useUpdateUser';
+import toast from 'react-hot-toast';
 
 function UpdateUserDataForm() {
   // We don't need the loading state, and can immediately use the user data, because we know that it has already been loaded at this point
   const {
     user: { email, user_metadata: { fullName: currentFullName } = {} },
+    guestUser,
   } = useUser();
   const { isUpdating, updateUser } = useUpdateUser();
 
@@ -21,6 +23,7 @@ function UpdateUserDataForm() {
 
   function handleSubmit(e) {
     e.preventDefault();
+    if (guestUser) return toast.error('You are not allowed');
     if (!fullName) return;
     updateUser(
       { fullName, avatar },
@@ -41,7 +44,7 @@ function UpdateUserDataForm() {
   return (
     <Form onSubmit={handleSubmit}>
       <FormRow label="Email address">
-        <Input value={email} disabled={isUpdating} readOnly />
+        <Input value={email} disabled={isUpdating || guestUser} readOnly />
       </FormRow>
       <FormRow label="Full name">
         <Input
@@ -49,7 +52,7 @@ function UpdateUserDataForm() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           id="fullName"
-          disabled={isUpdating}
+          disabled={isUpdating || guestUser}
         />
       </FormRow>
       <FormRow label="Avatar image">
@@ -57,19 +60,19 @@ function UpdateUserDataForm() {
           id="avatar"
           accept="image/*"
           onChange={(e) => setAvatar(e.target.files[0])}
-          disabled={isUpdating}
+          disabled={isUpdating || guestUser}
         />
       </FormRow>
       <FormRow>
         <Button
           type="reset"
           variation="secondary"
-          disabled={isUpdating}
+          disabled={isUpdating || guestUser}
           onClick={handleCancel}
         >
           Cancel
         </Button>
-        <Button disabled={isUpdating}>Update account</Button>
+        <Button disabled={isUpdating || guestUser}>Update account</Button>
       </FormRow>
     </Form>
   );

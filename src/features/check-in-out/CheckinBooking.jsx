@@ -15,6 +15,7 @@ import useBooking from '../bookings/useBooking';
 import useCheckin from './useCheckin';
 import { formatCurrency } from '../../utils/helpers';
 import useSettings from '../settings/useSettings';
+import useUser from '../authentication/useUser';
 
 const Box = styled.div`
   /* Box */
@@ -28,6 +29,7 @@ function CheckinBooking() {
   const { isLoading, booking } = useBooking();
   const { isCheckin, checkin } = useCheckin();
   const { settings, isLoading: isSettings } = useSettings();
+  const { guestUser } = useUser();
 
   const [confirmPaid, setConfirmPaid] = useState(false);
   const [addBreakfast, setAddBreakfast] = useState(false);
@@ -51,6 +53,7 @@ function CheckinBooking() {
   if (isLoading || isSettings) return <Spinner />;
 
   function handleCheckin() {
+    if (guestUser) return;
     if (!confirmPaid) return;
     if (addBreakfast) {
       checkin({
@@ -78,7 +81,7 @@ function CheckinBooking() {
         <Box>
           <Checkbox
             checked={addBreakfast}
-            disabled={addBreakfast}
+            disabled={addBreakfast || guestUser}
             onChange={() => {
               setAddBreakfast((add) => !add);
               setConfirmPaid(false);
@@ -93,7 +96,7 @@ function CheckinBooking() {
       <Box>
         <Checkbox
           checked={confirmPaid}
-          disabled={confirmPaid || isCheckin}
+          disabled={confirmPaid || isCheckin || guestUser}
           onChange={() => setConfirmPaid((confirm) => !confirm)}
           id="confirm"
         >
@@ -109,7 +112,10 @@ function CheckinBooking() {
       </Box>
 
       <ButtonGroup>
-        <Button onClick={handleCheckin} disabled={!confirmPaid || isCheckin}>
+        <Button
+          onClick={handleCheckin}
+          disabled={!confirmPaid || isCheckin || guestUser}
+        >
           Check in booking #{bookingId}
         </Button>
         <Button variation="secondary" onClick={moveBack}>

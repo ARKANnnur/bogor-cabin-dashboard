@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useForm } from 'react-hook-form';
 import { useDebounce } from 'use-debounce';
+import { useEffect, useState } from 'react';
 
 import Input from '../../ui/Input';
 import Form from '../../ui/Form';
@@ -9,11 +10,12 @@ import FormRow from '../../ui/FormRow';
 
 import useCreateGuest from './useCreateGuest';
 import { useEditGuest } from './useEditGuest';
-import { useEffect, useState } from 'react';
 import { getFlagCode } from '../../services/apiGuests';
+import useUser from '../authentication/useUser';
 
 function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
   const { id: editId, ...editValues } = guestToEdit;
+  const { guestUser } = useUser();
 
   const isEditSession = Boolean(editId);
 
@@ -42,6 +44,7 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
   }, [value]);
 
   function onSubmit(data) {
+    if (guestUser) return;
     if (isEditSession)
       return editGuest(
         {
@@ -59,7 +62,10 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
         }
       );
     createGuest(
-      { ...data, countryFlag: `https://flagcdn.com/${countryFlag.toLowerCase()}.svg` },
+      {
+        ...data,
+        countryFlag: `https://flagcdn.com/${countryFlag.toLowerCase()}.svg`,
+      },
       {
         onSuccess: () => {
           reset();
@@ -82,7 +88,7 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
         <Input
           type="text"
           id="fullName"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('fullName', { required: 'this field is require' })}
         />
       </FormRow>
@@ -91,10 +97,15 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
         <Input
           type="email"
           id="email"
-          disabled={isWorking}
-          {...register('email', { required: 'this field is require', validate: value =>
-          // eslint-disable-next-line no-useless-escape
-          /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(value) || 'wrong email type'})}
+          disabled={isWorking || guestUser}
+          {...register('email', {
+            required: 'this field is require',
+            validate: (value) =>
+              // eslint-disable-next-line no-useless-escape
+              /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+                value
+              ) || 'wrong email type',
+          })}
         />
       </FormRow>
 
@@ -102,7 +113,7 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
         <Input
           type="text"
           id="nationality"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('nationality', { required: 'this field is require' })}
         />
       </FormRow>
@@ -111,7 +122,7 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
         <Input
           type="text"
           id="nationalID"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('nationalID', { required: 'this field is require' })}
         />
       </FormRow>
@@ -124,8 +135,8 @@ function CreateGuestFrom({ guestToEdit = {}, onCloseModal }) {
         >
           Cancel
         </Button>
-        <Button disabled={isWorking}>
-          {isEditSession ? 'Edit cabin' : 'Create new cabin'}
+        <Button disabled={isWorking || guestUser}>
+          {isEditSession ? 'Edit Guest' : 'Create new Guest'}
         </Button>
       </FormRow>
     </Form>

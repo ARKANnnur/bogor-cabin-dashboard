@@ -26,12 +26,14 @@ import {
   convertToCustomTimestamp,
   formattedInitialDate,
 } from '../../utils/helpers';
+import useUser from '../authentication/useUser';
 
 function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
   const { isDarkMode } = useDarkMode();
   const { isLoading: isSettings, settings = {} } = useSettings();
   const { isLoading: isCabins, cabins = {} } = useCabin();
   const { isLoading: isGuests, guests = {} } = useGuests();
+  const { guestUser } = useUser();
 
   const { isCreating, createBooking } = useCreateBooking();
   const { isEditing, editBooking } = useEditBooking();
@@ -168,6 +170,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
   ]);
 
   function onSubmit(data) {
+    if(guestUser) return
     const startDate = convertToCustomTimestamp(selectNowDays?.from);
     const endDate = convertToCustomTimestamp(selectNowDays?.to);
 
@@ -234,7 +237,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
           <StyledSelect
             type="text"
             id="guestId"
-            disabled={isWorking}
+            disabled={isWorking || guestUser}
             onChange={(e) => setGuestId(e.target.value)}
           >
             {guests.map((guest) => (
@@ -255,7 +258,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         <Input
           type="number"
           id="numGuests"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('numGuests', {
             required: 'This field is required',
             min: {
@@ -280,7 +283,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
           <StyledSelect
             type="text"
             id="cabinId"
-            disabled={isWorking}
+            disabled={isWorking || guestUser}
             onChange={(e) =>
               setCabinPrice({
                 id: e.target.options[e.target.selectedIndex].getAttribute(
@@ -308,7 +311,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         <Input
           type="text"
           id="cabinPrice"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           value={cabinPrice.price}
         />
       </FormRow>
@@ -386,7 +389,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         <StyledSelect
           type="text"
           id="hasBreakfast"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           value={hasBreakfast}
           onChange={() => setHasBreakfast((set) => !set)}
         >
@@ -419,7 +422,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         <StyledSelect
           type="number"
           id="status"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           defaultValue="unconfirmed"
           {...register('status', {
             required: 'this field is require',
@@ -435,7 +438,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         <StyledSelect
           type="Boolean"
           id="isPaid"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           defaultValue="False"
           {...register('isPaid', {
             required: 'this field is require',
@@ -450,7 +453,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         <Textarea
           type="number"
           id="observations"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           defaultValue=""
           {...register('observations', { required: 'this field is require' })}
         />
@@ -464,7 +467,7 @@ function CreateBookingForm({ bookingToEdit = {}, onCloseModal }) {
         >
           Cancel
         </Button>
-        <Button disabled={isWorking}>
+        <Button disabled={isWorking || guestUser}>
           {isEditSession ? 'Edit cabin' : 'Create new cabin'}
         </Button>
       </FormRow>

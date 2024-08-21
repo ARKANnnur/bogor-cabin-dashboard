@@ -1,6 +1,6 @@
-# The WIld Oasis
+# Bogor Cabin Dashboard
 
-Main Project in Jonas Schmedtmann's Ultimate React Course.
+Manage Bogor Cabin data by adding, deleting, editing or viewing expenses, daily and monthly activities and also making the system easier to use and efficient
 
 ## User For Employee Login
 Email : piven88001@ikanid.com

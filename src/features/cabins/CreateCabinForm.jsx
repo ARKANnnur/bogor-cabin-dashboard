@@ -10,6 +10,7 @@ import FormRow from '../../ui/FormRow';
 
 import useCreateCabin from './useCreateCabin';
 import useEditCabin from './useEditCabin';
+import useUser from '../authentication/useUser';
 
 CreateCabinForm.propTypes = {
   cabinToEdit: PropTypes.object,
@@ -18,6 +19,7 @@ CreateCabinForm.propTypes = {
 
 function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
   const { id: editId, ...editValues } = cabinToEdit;
+  const { guestUser } = useUser();
 
   const isEditSession = Boolean(editId);
 
@@ -33,6 +35,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
 
   function onSubmit(data) {
     const image = typeof data.image === 'string' ? data.image : data.image[0];
+    if(guestUser) return
 
     if (isEditSession)
       return editCabin(
@@ -68,7 +71,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         <Input
           type="text"
           id="name"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('name', { required: 'this field is require' })}
         />
       </FormRow>
@@ -77,7 +80,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         <Input
           type="number"
           id="maxCapacity"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('maxCapacity', {
             required: 'this field is require',
             min: { value: 1 },
@@ -90,7 +93,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         <Input
           type="number"
           id="regularPrice"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('regularPrice', {
             required: 'this field is require',
             min: { value: 1 },
@@ -103,7 +106,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         <Input
           type="number"
           id="discount"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           defaultValue={0}
           {...register('discount', {
             required: 'this field is require',
@@ -121,7 +124,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         <Textarea
           type="number"
           id="description"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           defaultValue=""
           {...register('description', { required: 'this field is require' })}
         />
@@ -131,7 +134,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         <FileInput
           id="image"
           accept="image/*"
-          disabled={isWorking}
+          disabled={isWorking || guestUser}
           {...register('image', {
             required: isEditSession ? false : 'this field is require',
           })}
@@ -146,7 +149,7 @@ function CreateCabinForm({ cabinToEdit = {}, onCloseModal }) {
         >
           Cancel
         </Button>
-        <Button disabled={isWorking}>
+        <Button disabled={isWorking || guestUser}>
           {isEditSession ? 'Edit cabin' : 'Create new cabin'}
         </Button>
       </FormRow>
