@@ -11,8 +11,8 @@ import useLogin from './useLogin';
 import useUser from './useUser';
 
 function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('guest@gmail.com');
+  const [password, setPassword] = useState('guest123');
   const navigate = useNavigate();
 
   const { isLoading, login } = useLogin();
